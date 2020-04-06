@@ -9,8 +9,10 @@ xViews::instance();
 class xViews {
 	protected $routes = [];
 	public function register( $route, $args = [] ) {
-		$defaults = [];
-		$args = wp_parse_args( $args, $defaults );
+		if ( is_array( $args ) ) {
+			$defaults = [];
+			$args = wp_parse_args( $args, $defaults );
+		}
 
 		$route = new Custom_Route( $route, $args );
 		$this->routes[] = $route;
@@ -121,13 +123,19 @@ class xViews {
 }
 
 class Custom_Route {
-	protected $route = null;
-	protected $args  = [];
-	protected $regex = null;
+	protected $route         = null;
+	protected $args          = [];
+	protected $regex         = null;
+	protected $callable_args = null;
 
 	public function __construct( $route, $args = [] ) {
 		$this->route = $route;
-		$this->args  = $args;
+
+		if ( is_callable( $args ) ) {
+			$this->callable_args = $args;
+		} else {
+			$this->args  = $args;
+		}
 	}
 
 	public function match( $url ) {
@@ -136,6 +144,10 @@ class Custom_Route {
 				if ( is_int( $i ) ) {
 					unset( $matches[ $i ] );
 				}
+			}
+
+			if ( is_callable( $this->callable_args ) ) {
+				$this->args = call_user_func( $this->callable_args, $matches );
 			}
 			return array_merge( $matches, $this->args );
 		}
