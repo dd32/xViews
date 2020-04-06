@@ -25,11 +25,14 @@ class xViews {
 
 	protected $settings = [
 		'passthrough' => true, // Whether it should hit WordPress Query parsing if we fail to match.
-		'wp-json'     => true, // Allow wp-json
+		'wp-json'     => true, // Allow wp-json.. or not?
 	];
-	public function setting( $name, $value ) {
-		$this->settings[ $name ] = $value;
+	public function setting( $name, $value = null ) {
+		if ( is_null( $value ) ) {
+			return $this->settings[ $name ] ?? false;
+		}
 
+		$this->settings[ $name ] = $value;
 		return $this;
 	}
 
@@ -48,7 +51,7 @@ class xViews {
 		$requested_url = $this->determine_url();
 
 		// If we're not allowing passthrough, but wp-json, allow it to be requested.
-		if ( ! $this->settings['passthrough'] && $this->settings['wp-json'] ) {
+		if ( ! $this->settings('passthrough') && $this->settings('wp-json') ) {
 			$this->routes[] = new Custom_Route( '/wp-json(?P<rest_route>.+)/' );
 			$this->routes[] = new Custom_Route( '/wp-json/', [ 'rest_route' => '/' ] );
 		}
@@ -69,7 +72,7 @@ class xViews {
 		}
 
 		// If we're passing through to WordPress, allow it.
-		if ( $this->settings['passthrough'] ) {
+		if ( $this->settings('passthrough') ) {
 			return $handle;
 		}
 
